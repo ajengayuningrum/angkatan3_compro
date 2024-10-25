@@ -3,101 +3,72 @@ session_start();
 include 'koneksi.php';
 
 // jika button simpan ditekan 
-$queryPengaturan = mysqli_query($koneksi, "SELECT * FROM general_setting ORDER BY id DESC");
-$rowPengaturan = mysqli_fetch_assoc($queryPengaturan);
-
 if (isset($_POST['simpan'])) {
-    $website_name       = $_POST['website_name'];
-    $website_link       = $_POST['website_link'];
-    $id                 = $_POST['id'];
-    $website_phone      = $_POST['website_phone'];
-    $website_email      = $_POST['website_email'];
-    $website_address    = $_POST['website_address'];
-
-
-
-
-
-    //mencari data di dalam table pengaturan, jika ada data akan diupdate
-    //jika tidak ada, akan diinsert
-
-
-    if (mysqli_num_rows($queryPengaturan) > 0) {
-        if (!empty($_FILES['foto']['name'])) {
-            $nama_foto =  $_FILES['foto']['name'];
-            $ukuran_foto =  $_FILES['foto']['size'];
-
-            $ext = array('png', 'jpg', 'jpeg');
-            $extFoto  = pathinfo($nama_foto, PATHINFO_EXTENSION);
-
-            //jika extension foto tidak ada ext yang terdaftar di array ext maka foto tidak boleh diupload
-            if (!in_array($extFoto, $ext)) {
-                echo "Ext tidak ditemukan";
-                die;
-            } else {
-                //pindahkan gambar dari tmp folder ke folder yang sudah kita buat
-                // unlink() : menghapus file
-                unlink('upload/' . $rowPengaturan['logo']);
-                move_uploaded_file($_FILES['foto']['tmp_name'], 'upload/' . $nama_foto);
-
-                $update =  mysqli_query($koneksi, "UPDATE general_setting SET website_name='$website_name', website_link='$website_link', logo ='$nama_foto', website_phone='$website_phone', website_email='$website_email', website_address='$website_address' WHERE id = '$id'");
-            }
-        } else {
-            $update =  mysqli_query($koneksi, "UPDATE general_setting SET website_name='$website_name', website_link='$website_link', website_phone='$website_phone', website_email='$website_email', website_address='$website_address' WHERE id = '$id'");
-        }
-    } else {
-
-        if (!empty($_FILES['foto']['name'])) {
-            $nama_foto =  $_FILES['foto']['name'];
-            $ukuran_foto =  $_FILES['foto']['size'];
-
-            $ext = array('png', 'jpg', 'jpeg');
-            $extFoto  = pathinfo($nama_foto, PATHINFO_EXTENSION);
-
-            //jika extension foto tidak ada ext yang terdaftar di array ext maka foto tidak boleh diupload
-            if (!in_array($extFoto, $ext)) {
-                echo "Ext tidak ditemukan";
-                die;
-            } else {
-                //pindahkan gambar dari tmp folder ke folder yang sudah kita buat
-                move_uploaded_file($_FILES['foto']['tmp_name'], 'upload/' . $nama_foto);
-
-                $insert =  mysqli_query($koneksi, "INSERT INTO general_setting (website_name, website_link, logo, website_phone, website_email, website_address) VALUES ('$website_name', '$website_link', '$nama_foto', '$website_phone', '$website_email', '$website_address')");
-            }
-        } else {
-            $insert =  mysqli_query($koneksi, "INSERT INTO general_setting (website_name, website_link, website_phone, website_email, website_address) VALUES ('$website_name', '$website_link', '$website_phone', '$website_email', '$website_address')");
-        }
-    }
+    $nama_instruktur = $_POST['nama_instruktur'];
+    $jurusan_instruktur = $_POST['jurusan_instruktur'];
 
     //$_POST: form input name=''
     //$_GET : url ?param='nilai'
-
     //$_FILES : ngambil nilai dari input type file
+    if (!empty($_FILES['foto']['name'])) {
+        $nama_foto =  $_FILES['foto']['name'];
+        $ukuran =  $_FILES['foto']['size'];
 
-    header("location:pengaturan-website.php?tambah=berhasil");
+        $ext = array('png', 'jpg', 'jpeg', 'jfif');
+        $extFoto  = pathinfo($nama_foto, PATHINFO_EXTENSION);
+
+        //jika extension foto tidak ada ext yang terdaftar di array ext maka foto tidak boleh diupload
+        if (!in_array($extFoto, $ext)) {
+            echo "Ext tidak ditemukan";
+            die;
+        } else {
+            //pindahkan gambar dari tmp folder ke folder yang sudah kita buat
+            move_uploaded_file($_FILES['foto']['tmp_name'], 'upload/' . $nama_foto);
+
+            $insert =  mysqli_query($koneksi, "INSERT INTO instruktur (nama_instruktur, jurusan_instruktur, foto) VALUES ('$nama_instruktur', '$jurusan_instruktur', '$nama_foto')");
+        }
+    } else {
+        $insert =  mysqli_query($koneksi, "INSERT INTO instruktur (nama_instruktur, jurusan_instruktur) VALUES ('$nama_instruktur', '$jurusan_instruktur')");
+    }
+    header("location:instruktur.php?tambah=berhasil");
 }
 
-
-
-
-
-
 $id  = isset($_GET['edit']) ?  $_GET['edit'] : '';
-$editUser = mysqli_query($koneksi, "SELECT * FROM user WHERE id = '$id'");
+$editUser = mysqli_query($koneksi, "SELECT * FROM instruktur WHERE id = '$id'");
 $rowEdit = mysqli_fetch_assoc($editUser);
 
 if (isset($_POST['edit'])) {
-    $nama = $_POST['nama'];
-    $email = $_POST['email'];
+    $nama_instruktur = $_POST['nama_instruktur'];
+    $jurusan_instruktur = $_POST['jurusan_instruktur'];
+
+    //jika user ingin memasukkan gambar
+    if (!empty($_FILES['foto']['name'])) {
+        $nama_foto =  $_FILES['foto']['name'];
+        $ukuran =  $_FILES['foto']['size'];
+
+        $ext = array('png', 'jpg', 'jpeg', 'jfif');
+        $extFoto  = pathinfo($nama_foto, PATHINFO_EXTENSION);
+
+        if (!in_array($extFoto, $ext)) {
+            echo "Extensi gambar tidak ditemukan";
+            die;
+        }else {
+            unlink('upload/' . $rowEdit['foto']);
+            move_uploaded_file($_FILES['foto']['tmp_name'], 'upload/' . $nama_foto);
+            //coding untuk update atau merubah ada di sini
+            $update =  mysqli_query($koneksi, "UPDATE instruktur SET nama_instruktur='$nama_instruktur', jurusan_instruktur='$jurusan_instruktur', foto='$nama_foto' WHERE id = '$id'");
+            header("location:instruktur.php?ubah=berhasil");
+        }
+    }else{
+        //ini kondisi kalo user tidak ingin memasukkan gambar
+        $update =  mysqli_query($koneksi, "UPDATE instruktur SET nama_instruktur='$nama_instruktur', jurusan_instruktur='$jurusan_instruktur' WHERE id = '$id'");
+        header("location:instruktur.php?ubah=berhasil");
+    }
 
     //jika button edit di klik
-    if (isset($_POST['edit'])) {
-        $password  = $_POST['password'];
-    } else {
-        $password  = $rowEdit['password'];
-    }
-    $update = mysqli_query($koneksi, "UPDATE user SET nama='$nama', password='$password' WHERE id = '$id'");
-    header("location:user.php?ubah=berhasil");
+
+    $update = mysqli_query($koneksi, "UPDATE instruktur SET nama_instruktur='$nama_instruktur', jurusan_instruktur='$jurusan_instruktur' WHERE id = '$id'");
+    header("location:instruktur.php?ubah=berhasil");
 }
 ?>
 
@@ -160,49 +131,31 @@ if (isset($_POST['edit'])) {
                         <div class="row">
                             <div class="col-sm-12">
                                 <div class="card">
-                                    <h3 class="card-header">Pengaturan Website</h3>
+                                    <div class="card-header"><?php echo isset($_GET['edit']) ? 'Edit' : 'Tambah' ?> Instruktur</div>
                                     <div class="card-body">
                                         <form action="" method="post" enctype="multipart/form-data">
-                                            <input type="hidden" class="form-control" name="id" value="<?php echo isset($rowPengaturan['id']) ? $rowPengaturan['id'] : '' ?>">
                                             <div class="mb-3 row">
                                                 <div class="col-sm-6">
-                                                    <div class="mb-3">
-                                                        <label for="" class="form-label">Nama Website</label>
-                                                        <input type="text" class="form-control" id="" name="website_name" placeholder="Masukkan Nama Website" required
-                                                            value="<?php echo isset($rowPengaturan['website_name']) ? $rowPengaturan['website_name'] : '' ?>">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="" class="form-label">Telepon</label>
-                                                        <input type="text" class="form-control" id="" name="website_phone" placeholder="Masukkan Telepon Website" required
-                                                            value="<?php echo isset($rowPengaturan['website_phone']) ? $rowPengaturan['website_phone'] : '' ?>">
-                                                    </div>
+                                                    <label for="" class="form-label">Nama Instruktur</label>
+                                                    <input type="text" class="form-control" id="" name="nama_instruktur" placeholder="Masukkan Nama Instruktur" required
+                                                        value="<?php echo isset($_GET['edit']) ? $rowEdit['nama_instruktur'] : '' ?>">
                                                 </div>
                                                 <div class="col-sm-6">
-                                                    <div class="mb-3">
-                                                        <label for="" class="form-label">Link Website</label>
-                                                        <input type="url" class="form-control" id="" name="website_link" placeholder="Masukkan Link Website Anda" required
-                                                            value="<?php echo isset($rowPengaturan['website_link']) ? $rowPengaturan['website_link'] : '' ?>">
-                                                    </div>
-                                                    <div class="mb-3">
-                                                        <label for="" class="form-label">Email Website</label>
-                                                        <input type="text" class="form-control" id="" name="website_email" placeholder="Masukkan Email Website" required
-                                                            value="<?php echo isset($rowPengaturan['website_email']) ? $rowPengaturan['website_email'] : '' ?>">
-                                                    </div>
+                                                    <label for="" class="form-label">Jurusan</label>
+                                                    <input type="text" class="form-control" id="" name="jurusan_instruktur" placeholder="Masukkan Jurusan Instruktur" required
+                                                        value="<?php echo isset($_GET['edit']) ? $rowEdit['jurusan_instruktur'] : '' ?>">
                                                 </div>
                                             </div>
-
-                                            <div class=" mb-3 row">
+                                            <!-- <div class=" mb-3 row">
                                                 <div class="col-sm-12">
-                                                    <label for="" class="form-label">Alamat</label>
-                                                    <input type="text" class="form-control" id="" name="website_address" placeholder="Masukkan Alamat Anda" required
-                                                        value="<?php echo isset($rowPengaturan['website_address']) ? $rowPengaturan['website_address'] : '' ?>">
+                                                    <label for="" class="form-label">Password</label>
+                                                    <input type="password" name="password" required class="form-control" id="">
                                                 </div>
-                                            </div>
+                                            </div> -->
                                             <div class=" mb-3 row">
                                                 <div class="col-sm-12">
                                                     <label for="" class="form-label">Foto</label>
                                                     <input type="file" name="foto">
-                                                    <img width="150" src="upload/<?php echo isset($rowPengaturan['logo']) ? $rowPengaturan['logo'] : '' ?>" alt="">
                                                 </div>
                                             </div>
                                             <div class="mb-3">
